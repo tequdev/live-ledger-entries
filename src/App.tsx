@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import './App.css'
 import { Client, type TransactionStream, type LedgerStream } from 'xrpl'
@@ -40,6 +40,14 @@ function App() {
         { LedgerEntryType: string; index: string }[]
       >
   >({ ledgerIndex: 0, transactions: 0, created: [], modified: [], deleted: [] })
+
+  const maxNodeCounts = useMemo(() => {
+    return Math.max(
+      nodes.created.length,
+      nodes.modified.length,
+      nodes.deleted.length,
+    )
+  }, [nodes])
 
   useEffect(() => {
     const networkId = searchParams.get('networkid') || '0'
@@ -153,6 +161,7 @@ function App() {
   )
 
   const Box = ({ color, index }: { color: string; index: number }) => {
+    const delayBase = 0.015 / (Number.parseInt(String(maxNodeCounts / 100)) + 1)
     return (
       <motion.div
         initial={{
@@ -164,7 +173,7 @@ function App() {
         }}
         animate={{ rotate: 180, scale: 1 }}
         transition={{
-          delay: index * 0.015,
+          delay: index * delayBase,
           type: 'spring',
           stiffness: 260,
           damping: 20,
