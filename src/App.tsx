@@ -161,7 +161,7 @@ function App() {
   )
 
   const Box = ({ color, index }: { color: string; index: number }) => {
-    const delayBase = 0.015 / (Number.parseInt(String(maxNodeCounts / 100)) + 1)
+    const delayBase = 0.01 / (Number.parseInt(String(maxNodeCounts / 100)) + 1)
     return (
       <motion.div
         initial={{
