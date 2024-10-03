@@ -72,7 +72,7 @@ function App() {
       const modifiedNodes = tx.meta.AffectedNodes.filter((value) =>
         isModifiedNode(value),
       ) as ModifiedNode[]
-      const deletedNodess = tx.meta.AffectedNodes.filter((value) =>
+      const deletedNodes = tx.meta.AffectedNodes.filter((value) =>
         isDeletedNode(value),
       ) as DeletedNode[]
       const createdNodes = tx.meta.AffectedNodes.filter((value) =>
@@ -102,7 +102,7 @@ function App() {
         })),
       )
       lastNodes.deleted.push(
-        ...deletedNodess.map((value) => ({
+        ...deletedNodes.map((value) => ({
           LedgerEntryType: value.DeletedNode.LedgerEntryType,
           index: value.DeletedNode.LedgerIndex,
         })),
