@@ -10,6 +10,8 @@ import {
   isModifiedNode,
   isDeletedNode,
 } from 'xrpl/dist/npm/models'
+import { useSearchParams } from 'react-router-dom'
+import { networks, mainnet } from 'xrpl-networks'
 
 const ignoredLedgerEntries = [
   'Invalid',
@@ -27,8 +29,6 @@ const nonEnabledLedgerEntries = [
   'DID',
 ]
 
-const client = new Client('wss://xrpl.ws')
-
 function uniqNodes<T extends { index: string; LedgerEntryType: string }>(
   nodes: T[],
 ): T[] {
@@ -36,6 +36,8 @@ function uniqNodes<T extends { index: string; LedgerEntryType: string }>(
 }
 
 function App() {
+  const [searchParams] = useSearchParams()
+  const [networkName, setNetworkName] = useState<string>()
   const [ledgerIndex, setLedgerIndex] = useState<number>()
   const [ledgerEntries, setLedgerEntries] = useState<string[]>([])
   const [nodes, setNodes] = useState<
@@ -47,6 +49,16 @@ function App() {
   >({ ledgerIndex: 0, transactions: 0, created: [], modified: [], deleted: [] })
 
   useEffect(() => {
+    const networkId = searchParams.get('networkid') || '0'
+    let network = networks.find(
+      (network) => String(network.networkId) === networkId,
+    )
+    if (!network) {
+      alert('Invalid network, connecting to mainnet')
+      network = mainnet
+    }
+    setNetworkName(network.name)
+    const client = new Client(network.rpc.default.websocket[0])
     const lastNodes: typeof nodes = {
       ledgerIndex: 0,
       transactions: 0,
@@ -133,7 +145,7 @@ function App() {
       client.off('transaction', transactionHandler)
       client.off('ledgerClosed', ledgerClosedHandler)
     }
-  }, [])
+  }, [searchParams])
 
   const nodesByLedgerEntryType = (entry: string) => {
     return {
@@ -167,6 +179,7 @@ function App() {
   return (
     <>
       <h1>Live Ledger Entries</h1>
+      <h2>{networkName}</h2>
       <h3>
         {ledgerIndex ? `${ledgerIndex} / ${nodes.transactions} txns` : '\u00A0'}
       </h3>
