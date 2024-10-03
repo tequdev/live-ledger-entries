@@ -47,7 +47,7 @@ function App() {
       nodes.modified.length,
       nodes.deleted.length,
     )
-  }, [nodes])
+  }, [nodes.created, nodes.modified, nodes.deleted])
 
   useEffect(() => {
     const networkId = searchParams.get('networkid') || '0'
@@ -157,7 +157,7 @@ function App() {
         deleted: nodes.deleted.filter((node) => node.LedgerEntryType === entry),
       }
     },
-    [nodes],
+    [nodes.created, nodes.modified, nodes.deleted],
   )
 
   const Box = ({ color, index }: { color: string; index: number }) => {
