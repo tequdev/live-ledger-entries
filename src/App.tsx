@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import './App.css'
 import { Client, type TransactionStream, type LedgerStream } from 'xrpl'
@@ -20,13 +20,6 @@ const ignoredLedgerEntries = [
   'Nickname',
   'Contract',
   'GeneratorMap',
-]
-
-const nonEnabledLedgerEntries = [
-  'Bridge',
-  'XChainOwnedClaimID',
-  'XChainOwnedCreateAccountClaimID',
-  'DID',
 ]
 
 function uniqNodes<T extends { index: string; LedgerEntryType: string }>(
@@ -117,7 +110,6 @@ function App() {
     const ledgerClosedHandler = (ledger: LedgerStream) => {
       setLedgerIndex(ledger.ledger_index - 1)
       setNodes(lastNodes)
-      console.log('Ledger closed:', lastNodes.modified.length)
     }
 
     client.connect().then(() => {
@@ -147,13 +139,18 @@ function App() {
     }
   }, [searchParams])
 
-  const nodesByLedgerEntryType = (entry: string) => {
-    return {
-      created: nodes.created.filter((node) => node.LedgerEntryType === entry),
-      modified: nodes.modified.filter((node) => node.LedgerEntryType === entry),
-      deleted: nodes.deleted.filter((node) => node.LedgerEntryType === entry),
-    }
-  }
+  const nodesByLedgerEntryType = useCallback(
+    (entry: string) => {
+      return {
+        created: nodes.created.filter((node) => node.LedgerEntryType === entry),
+        modified: nodes.modified.filter(
+          (node) => node.LedgerEntryType === entry,
+        ),
+        deleted: nodes.deleted.filter((node) => node.LedgerEntryType === entry),
+      }
+    },
+    [nodes],
+  )
 
   const Box = ({ color, index }: { color: string; index: number }) => {
     return (
@@ -238,56 +235,54 @@ function App() {
           justifyContent: 'space-around',
         }}
       >
-        {ledgerEntries
-          .filter((entry) => !nonEnabledLedgerEntries.includes(entry))
-          .map((entry) => (
+        {ledgerEntries.map((entry) => (
+          <motion.div
+            key={entry}
+            initial={{
+              opacity: 0,
+              border: 1,
+              margin: 4,
+              borderStyle: 'solid',
+              borderColor: 'gray',
+              width: '300px',
+              minHeight: '120px',
+            }}
+            animate={{ opacity: 1 }}
+          >
+            {entry}
             <motion.div
-              key={entry}
               initial={{
-                opacity: 0,
-                border: 1,
-                margin: 4,
-                borderStyle: 'solid',
-                borderColor: 'gray',
-                width: '300px',
-                minHeight: '120px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                marginBottom: 12,
+                paddingLeft: 8,
+                paddingRight: 8,
               }}
-              animate={{ opacity: 1 }}
             >
-              {entry}
-              <motion.div
-                initial={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  marginBottom: 12,
-                  paddingLeft: 8,
-                  paddingRight: 8,
-                }}
-              >
-                {nodesByLedgerEntryType(entry).created.map((node, i) => (
-                  <Box key={node.index} index={i} color="blue" />
-                ))}
-                {nodesByLedgerEntryType(entry).modified.map((node, i) => (
-                  <Box
-                    key={node.index}
-                    index={nodesByLedgerEntryType(entry).created.length + i}
-                    color="green"
-                  />
-                ))}
-                {nodesByLedgerEntryType(entry).deleted.map((node, i) => (
-                  <Box
-                    key={node.index}
-                    index={
-                      nodesByLedgerEntryType(entry).created.length +
-                      nodesByLedgerEntryType(entry).modified.length +
-                      i
-                    }
-                    color="red"
-                  />
-                ))}
-              </motion.div>
+              {nodesByLedgerEntryType(entry).created.map((node, i) => (
+                <Box key={node.index} index={i} color="blue" />
+              ))}
+              {nodesByLedgerEntryType(entry).modified.map((node, i) => (
+                <Box
+                  key={node.index}
+                  index={nodesByLedgerEntryType(entry).created.length + i}
+                  color="green"
+                />
+              ))}
+              {nodesByLedgerEntryType(entry).deleted.map((node, i) => (
+                <Box
+                  key={node.index}
+                  index={
+                    nodesByLedgerEntryType(entry).created.length +
+                    nodesByLedgerEntryType(entry).modified.length +
+                    i
+                  }
+                  color="red"
+                />
+              ))}
             </motion.div>
-          ))}
+          </motion.div>
+        ))}
       </motion.div>
     </>
   )
